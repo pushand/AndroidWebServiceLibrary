@@ -135,9 +135,19 @@ public class BaseApi implements WebServiceAPI{
                     @Override
                     public void run() {
                         if(statusCode == 200 ){
-                            callback.response(gson.fromJson(jsonString, genericTypes[0]));
+                            String value = genericTypes[0].toString().split(" ")[1];
+                            if(value.substring(value.lastIndexOf(".")+1).equals("String")) {
+                                callback.response(jsonString);
+                            }else{
+                                callback.response(gson.fromJson(jsonString, genericTypes[0]));
+                            }
                         } else {
-                            callback.error(gson.fromJson(jsonString, genericTypes[1]),errorMessage,statusCode);
+                            String value = genericTypes[1].toString().split(" ")[1];
+                            if(value.substring(value.lastIndexOf(".")+1).equals("String")) {
+                                callback.error(jsonString, errorMessage, statusCode);
+                            }else {
+                                callback.error(gson.fromJson(jsonString, genericTypes[1]), errorMessage, statusCode);
+                            }
                         }
                     }
                 });

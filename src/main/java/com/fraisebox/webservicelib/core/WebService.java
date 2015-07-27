@@ -35,44 +35,49 @@ public class WebService extends Service {
     }
 
     private String call() {
-
         HttpURLConnection urlConnection = null;
         try {
             BaseApi baseApi = (BaseApi) webServiceAPI;
             URL url = getUrl(baseApi);
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setReadTimeout(baseApi.getReadTimeoutInSeconds());
-            urlConnection.setConnectTimeout(baseApi.getConnectionTimeoutInSeconds());
-            urlConnection.setRequestMethod(baseApi.getRequestMethod());
-            urlConnection.setDoInput(baseApi.isDoInput());
-            urlConnection.setDoOutput(baseApi.isDoOutput());
-            urlConnection.setRequestProperty("Accept-Charset", baseApi.getCharset());
-            urlConnection.setRequestProperty("Content-Type", baseApi.getContentType() + ";charset=" + baseApi.getCharset());
-            if (baseApi.getRequestMethod().equals(BaseApi.REQUEST_TYPE_POST)) {
-                Uri.Builder builder = new Uri.Builder();
-                for (Map.Entry<String, String> entry : baseApi.getParams().entrySet()) {
-                    builder.appendQueryParameter(entry.getKey(), entry.getValue());
+            try {
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setReadTimeout(baseApi.getReadTimeoutInSeconds());
+                urlConnection.setConnectTimeout(baseApi.getConnectionTimeoutInSeconds());
+                urlConnection.setRequestMethod(baseApi.getRequestMethod());
+                urlConnection.setDoInput(baseApi.isDoInput());
+                urlConnection.setDoOutput(baseApi.isDoOutput());
+                urlConnection.setRequestProperty("Accept-Charset", baseApi.getCharset());
+                urlConnection.setRequestProperty("Content-Type", baseApi.getContentType() + ";charset=" + baseApi.getCharset());
+                if (baseApi.getRequestMethod().equals(BaseApi.REQUEST_TYPE_POST)) {
+                    Uri.Builder builder = new Uri.Builder();
+                    for (Map.Entry<String, String> entry : baseApi.getParams().entrySet()) {
+                        builder.appendQueryParameter(entry.getKey(), entry.getValue());
+                    }
+                    String query = builder.build().getEncodedQuery();
+                    OutputStream os = urlConnection.getOutputStream();
+                    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, baseApi.getCharset()));
+                    writer.write(query);
+                    writer.flush();
+                    writer.close();
+                    os.close();
+                    urlConnection.connect();
                 }
-                String query = builder.build().getEncodedQuery();
-                OutputStream os = urlConnection.getOutputStream();
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, baseApi.getCharset()));
-                writer.write(query);
-                writer.flush();
-                writer.close();
-                os.close();
-                urlConnection.connect();
+                statusCode = urlConnection.getResponseCode();
+                return readStream(urlConnection.getInputStream());
+            } catch (IOException e) {
+                e.printStackTrace();
+                errorMessage = e.getMessage();
+                return readStream(urlConnection.getErrorStream());
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
             }
-            statusCode = urlConnection.getResponseCode();
-            return readStream(urlConnection.getInputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            errorMessage = e.getMessage();
-            return readStream(urlConnection.getErrorStream());
-        } finally {
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
+        }catch(MalformedURLException e){
+            errorMessage = "MalformedURLException "+" "+e.getMessage();
+            return null;
         }
+
     }
 
     private URL getUrl(BaseApi baseApi) throws MalformedURLException {
