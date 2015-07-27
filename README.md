@@ -23,7 +23,7 @@ Usage
 	    ⁃   WebServiceHelper.makeWebServiceCall(new MyApi(), new WebServiceHelper.Callback<Response, Error>() {
 	                    //will be called if response status code is 200
                         @Override
-                        public void response(Hello hello) {
+                        public void response(Response response) {
 
                         }
                         // will be called in case of IOException where response status code != 200
