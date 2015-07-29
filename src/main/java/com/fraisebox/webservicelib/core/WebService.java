@@ -67,6 +67,11 @@ public class WebService extends Service {
             } catch (IOException e) {
                 e.printStackTrace();
                 errorMessage = e.getMessage();
+                try {
+                    statusCode = urlConnection.getResponseCode();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
                 return readStream(urlConnection.getErrorStream());
             } finally {
                 if (urlConnection != null) {
