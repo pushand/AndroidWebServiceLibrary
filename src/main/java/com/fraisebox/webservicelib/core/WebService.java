@@ -1,6 +1,7 @@
 package com.fraisebox.webservicelib.core;
 
 import android.net.Uri;
+import android.util.Log;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -31,7 +32,7 @@ public class WebService extends Service {
 
     @Override
     public void makeCall() {
-       webServiceAPI.response(call(),statusCode,errorMessage);
+       webServiceAPI.response(call(), statusCode, errorMessage);
     }
 
     private String call() {
@@ -39,6 +40,7 @@ public class WebService extends Service {
         try {
             BaseApi baseApi = (BaseApi) webServiceAPI;
             URL url = getUrl(baseApi);
+            Log.d("Service", "Request \n" + url.toExternalForm());
             try {
                 urlConnection = (HttpURLConnection) url.openConnection();
                 urlConnection.setReadTimeout(baseApi.getReadTimeoutInSeconds());
@@ -48,15 +50,20 @@ public class WebService extends Service {
                 urlConnection.setDoOutput(baseApi.isDoOutput());
                 urlConnection.setRequestProperty("Accept-Charset", baseApi.getCharset());
                 urlConnection.setRequestProperty("Content-Type", baseApi.getContentType() + ";charset=" + baseApi.getCharset());
+                String data = null;
                 if (baseApi.getRequestMethod().equals(BaseApi.REQUEST_TYPE_POST)) {
-                    Uri.Builder builder = new Uri.Builder();
-                    for (Map.Entry<String, String> entry : baseApi.getParams().entrySet()) {
-                        builder.appendQueryParameter(entry.getKey(), entry.getValue());
+                    if (baseApi.getContentType().equals(BaseApi.APP_URL_ENCODED)) {
+                        Uri.Builder builder = new Uri.Builder();
+                        for (Map.Entry<String, String> entry : baseApi.getParams().entrySet()) {
+                            builder.appendQueryParameter(entry.getKey(), entry.getValue());
+                        }
+                        data = builder.build().getEncodedQuery();
+                    } else if (baseApi.getContentType().equals(BaseApi.APP_JSON)) {
+                        data = baseApi.getJsonPostBody();
                     }
-                    String query = builder.build().getEncodedQuery();
                     OutputStream os = urlConnection.getOutputStream();
                     BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os, baseApi.getCharset()));
-                    writer.write(query);
+                    writer.write(data);
                     writer.flush();
                     writer.close();
                     os.close();
@@ -65,7 +72,6 @@ public class WebService extends Service {
                 statusCode = urlConnection.getResponseCode();
                 return readStream(urlConnection.getInputStream());
             } catch (IOException e) {
-                e.printStackTrace();
                 errorMessage = e.getMessage();
                 try {
                     statusCode = urlConnection.getResponseCode();
@@ -78,21 +84,19 @@ public class WebService extends Service {
                     urlConnection.disconnect();
                 }
             }
-        }catch(MalformedURLException e){
-            errorMessage = "MalformedURLException "+" "+e.getMessage();
+        } catch (MalformedURLException e) {
+            errorMessage = "MalformedURLException " + " " + e.getMessage();
             return null;
         }
 
     }
 
     private URL getUrl(BaseApi baseApi) throws MalformedURLException {
-        if (baseApi.getRequestMethod().equals(BaseApi.REQUEST_TYPE_GET)) {
-            Uri.Builder builder = Uri.parse(baseApi.getUrl()).buildUpon();
-            for (Map.Entry<String, String> entry : baseApi.getParams().entrySet()) {
-                builder.appendQueryParameter(entry.getKey(), entry.getValue());
-            }
-            return new URL(builder.build().toString());
-        } else return new URL(baseApi.getUrl());
+        Uri.Builder builder = Uri.parse(baseApi.getUrl()).buildUpon();
+        for (Map.Entry<String, String> entry : baseApi.getUrlParams().entrySet()) {
+            builder.appendQueryParameter(entry.getKey(), entry.getValue());
+        }
+        return new URL(builder.build().toString());
     }
 
     private String readStream(InputStream inputStream) {
@@ -108,7 +112,6 @@ public class WebService extends Service {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
             }
             return writer.toString();
         } else{

@@ -11,8 +11,19 @@ Usage
 	    public class MyApi extends BaseApi{
                 public MyApi() {
                         super(BaseApi.REQUEST_TYPE_POST,"http://your-api.com");
-                        addParams("email", "your email");
-                        addParams("password", "your password");
+
+                        //not compulsory. set content type url encoded (default) or json
+                        setContentType(APP_URL_ENCODED);
+
+                        // add url param to get or post request
+                        addUrlParams("email", "your email");
+                        addUrlParams("password", "your password");
+
+                        //send params to post request
+                        addParams("your-key","your-value")
+
+                        //send json body to post request
+                        setJsonPostBody(Object yourClassThatNeedsToBeConvertedToJSON)
                     }
          }
 

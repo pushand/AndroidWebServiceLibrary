@@ -22,17 +22,21 @@ public class BaseApi implements WebServiceAPI{
     private static final int CONNECTION_TIMEOUT_IN__TEN_SEC = 10;
     private static final int READ_TIMEOUT_IN_FIFTEEN_SEC = 15;
     private static final int SEC_TO_MILLSEC = 1000;
+    public static final String APP_URL_ENCODED = "application/x-www-form-urlencoded";
+    public static final String APP_JSON = "application/json";
     private final Gson gson;
 
     private String requestMethod;
     private String url;
     private HashMap<String,String> params = new HashMap<>();
+    private HashMap<String, String> urlParams = new HashMap<>();
     private int connectionTimeoutInSeconds=CONNECTION_TIMEOUT_IN__TEN_SEC * SEC_TO_MILLSEC;
     private int readTimeoutInSeconds=READ_TIMEOUT_IN_FIFTEEN_SEC * SEC_TO_MILLSEC;
     private boolean doInput=true;
     private boolean doOutput=false;
     private String charset = "UTF-8";
-    private String contentType = "application/x-www-form-urlencoded";
+    private String contentType = APP_URL_ENCODED;
+    private String jsonPostBody;
 
     private WebServiceHelper.Callback callback;
 
@@ -103,6 +107,14 @@ public class BaseApi implements WebServiceAPI{
         params.put(key, value);
     }
 
+    public void addUrlParams(String key, String value) {
+        urlParams.put(key, value);
+    }
+
+    public HashMap<String, String> getUrlParams() {
+        return urlParams;
+    }
+
     public HashMap<String, String> getParams(){
         return params;
     }
@@ -122,6 +134,14 @@ public class BaseApi implements WebServiceAPI{
 
     public void setContentType(String contentType) {
         this.contentType = contentType;
+    }
+
+    public String getJsonPostBody() {
+        return jsonPostBody;
+    }
+
+    public void setJsonPostBody(Object jsonPostBody) {
+        this.jsonPostBody = new Gson().toJson(jsonPostBody);
     }
 
     @Override
