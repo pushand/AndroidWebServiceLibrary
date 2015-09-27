@@ -17,8 +17,8 @@ import java.util.HashMap;
  */
 public class BaseApi implements WebServiceAPI{
 
-    protected static final String REQUEST_TYPE_GET = "GET";
-    protected static final String REQUEST_TYPE_POST = "POST";
+    public static final String REQUEST_TYPE_GET = "GET";
+    public static final String REQUEST_TYPE_POST = "POST";
     private static final int CONNECTION_TIMEOUT_IN__TEN_SEC = 10;
     private static final int READ_TIMEOUT_IN_FIFTEEN_SEC = 15;
     private static final int SEC_TO_MILLSEC = 1000;
@@ -156,7 +156,7 @@ public class BaseApi implements WebServiceAPI{
                     public void run() {
                         if(statusCode == 200 ){
                             String value = genericTypes[0].toString().split(" ")[1];
-                            if(value.substring(value.lastIndexOf(".")+1).equals("String")) {
+                            if(value.substring(value.lastIndexOf(".")+1).equals(" ")) {
                                 callback.response(jsonString);
                             }else{
                                 callback.response(gson.fromJson(jsonString, genericTypes[0]));
